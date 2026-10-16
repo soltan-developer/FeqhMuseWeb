@@ -17,9 +17,15 @@ jobs:
         run: node --check app.js
       - name: Verify evidence IDs, data integrity and UI
         run: node tests/smoke.mjs
-      - name: Ensure required Pages assets exist
+      - name: Verify authenticated origin security
+        run: |
+          node --check server.mjs
+          node tests/auth.mjs
+      - name: Ensure required application assets exist
         run: |
           test -s index.html
           test -s styles.css
           test -s app.js
           test -s data/review-data.json
+          test -s server.mjs
+          test -s Dockerfile
