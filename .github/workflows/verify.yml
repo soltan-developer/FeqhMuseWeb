@@ -5,7 +5,7 @@ on:
   pull_request:
   workflow_dispatch:
 jobs:
-  review-portal:
+  guided-review:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -13,19 +13,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Validate JavaScript syntax
+      - name: Verify JavaScript syntax
         run: node --check app.js
-      - name: Verify evidence IDs, data integrity and UI
+      - name: Verify Persian guided review and C4 evidence
         run: node tests/smoke.mjs
-      - name: Verify authenticated origin security
-        run: |
-          node --check server.mjs
-          node tests/auth.mjs
-      - name: Ensure required application assets exist
+      - name: Ensure only static Pages assets are needed
         run: |
           test -s index.html
           test -s styles.css
           test -s app.js
           test -s data/review-data.json
-          test -s server.mjs
-          test -s Dockerfile
+          test ! -f server.mjs
+          test ! -f Dockerfile
+          test ! -f .env.example
