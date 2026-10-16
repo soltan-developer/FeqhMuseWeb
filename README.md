@@ -49,9 +49,11 @@
 
 برای آزمایش روی **همان کامپیوتر شخصی** می‌توانید با متغیرهای محلی زیر اجرا کنید:
 
-    FEQH_AUTH_USERNAME=scholar FEQH_AUTH_PASSWORD="SET_A_NEW_LONG_RANDOM_DEV_PASSWORD_123" FEQH_ALLOW_HTTP_DEV=1 FEQH_HOST=127.0.0.1 PORT=3000 node server.mjs
+    read -rs -p "Enter a unique local test password (at least 16 chars): " FEQH_AUTH_PASSWORD; echo
+    export FEQH_AUTH_PASSWORD
+    FEQH_AUTH_USERNAME=scholar FEQH_ALLOW_HTTP_DEV=1 FEQH_HOST=127.0.0.1 PORT=3000 node server.mjs
 
-نمونه بالا فقط نمایشی است؛ برای استفاده واقعی گذرواژه یکتای خودتان را قرار دهید. آدرس توسعه: http://127.0.0.1:3000 .
+از کپی‌کردن گذرواژه‌های نمونه و عمومی اجتناب کنید. آدرس توسعه: http://127.0.0.1:3000 .
 
 ## حریم خصوصی داوری
 
