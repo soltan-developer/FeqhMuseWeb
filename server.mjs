@@ -200,7 +200,15 @@ const server=http.createServer(async(req,res)=>{
     return send(req,res,401,'Authentication required','text/plain; charset=utf-8');
   }
   try {
-    const data=await fs.readFile(path.join(root,asset.file));
+    let data=await fs.readFile(path.join(root,asset.file));
+    if(asset.file==='index.html') {
+      // Only the authenticated origin injects its real server-side logout control.
+      const markup='<div class="topbar-actions">';
+      const logout='<div class="topbar-actions"><form method="POST" action="/logout"><button type="submit" class="secondary small-btn">خروج امن</button></form>';
+      const html=data.toString('utf8');
+      if(!html.includes(markup))throw Error('Missing topbar logout injection marker');
+      data=Buffer.from(html.replace(markup,logout),'utf8');
+    }
     return send(req,res,200,data,asset.type);
   }catch(error){
     return send(req,res,error?.code==='ENOENT'?503:500,
