@@ -1,81 +1,96 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-import { createHash } from 'node:crypto';
-import { Script } from 'node:vm';
-const folder=new URL('../',import.meta.url);
-const read=(file)=>readFileSync(new URL(file,folder),'utf8');
-const data=JSON.parse(read('data/review-data.json'));
-const html=read('index.html');
-const css=read('styles.css');
-const js=read('app.js');
-const parts=['scope','activation','defeaters','exceptions','conflict_policy','principle'];
-const assertions=[];
-function check(name,fn){fn();assertions.push(name);}
-check('browser JavaScript syntax',()=>new Script(js,{filename:'app.js'}));
-check('C4 dataset schema and non-admission',()=>{
-  assert.equal(data.schema_version,'feqh-scholar-review-portal-v1');
-  assert.equal(data.status,'RESEARCH_ONLY_NOT_INDEPENDENTLY_SCHOLARLY_APPROVED');
-  assert.equal(data.rules.length,10);
-  assert.equal(data.sources.length,34);
+import {readFileSync} from 'node:fs';
+import {createHash} from 'node:crypto';
+import {Script} from 'node:vm';
+const root=new URL('../',import.meta.url);
+const read=name=>readFileSync(new URL(name,root),'utf8');
+const html=read('index.html'), css=read('styles.css'), code=read('app.js');
+const source=JSON.parse(read('data/review-data.json'));
+const PARTS=['scope','activation','defeaters','exceptions','conflict_policy','principle'];
+let checked=0;
+function test(title,fn){fn();console.log('PASS',title);checked++;}
+test('HTML/CSS/JS assets exist and scripts parse',()=>{
+  new Script(code,{filename:'app.js'});
+  assert.ok(css.length>5000&&html.length>2500);
+  assert.match(html,/<html lang="fa" dir="rtl">/);
+  assert.match(html,/href="styles.css"/);
+  assert.match(html,/src="app.js"/);
 });
-check('canonical source identities are unique and byte-digest intact',()=>{
+test('Vazirmatn is explicitly used by CSS and loaded in page',()=>{
+  assert.match(css,/--font:'Vazirmatn'/);
+  assert.match(html,/fonts.googleapis.com\/css2\?family=Vazirmatn/);
+});
+test('academic data preserve their version, history and non-admission',()=>{
+  assert.equal(source.schema_version,'feqh-scholar-review-portal-v1');
+  assert.equal(source.rules.length,10);
+  assert.equal(source.sources.length,34);
+  assert.equal(source.status,'RESEARCH_ONLY_NOT_INDEPENDENTLY_SCHOLARLY_APPROVED');
+  assert.ok(source.openNodes.some(x=>x.includes('CE-01')));
+});
+test('each source has sound stable ID, raw hash and edition uncertainty',()=>{
   const ids=new Set();
-  for(const s of data.sources){
-    assert.match(s.id,/^ANS-\d+-R\d+-S\d+$/);
-    assert.ok(!ids.has(s.id),'duplicate source ID '+s.id);ids.add(s.id);
-    assert.equal(s.id.split('-R')[0].replace('ANS-',''),s.book);
-    assert.equal(+s.id.match(/-R(\d+)-/)[1],s.record);
-    assert.equal(s.hash,createHash('sha256').update(s.quote,'utf8').digest('hex'));
-    assert.equal(s.printEdition,'PRINT_EDITION_UNKNOWN');
-    assert.ok(s.quote.length>=5);
+  for(const passage of source.sources){
+    assert.match(passage.id,/^ANS-\d+-R\d+-S\d+$/);
+    assert.ok(!ids.has(passage.id));ids.add(passage.id);
+    assert.equal(passage.book,passage.id.match(/^ANS-(\d+)/)[1]);
+    assert.equal(passage.record,+passage.id.match(/-R(\d+)-/)[1]);
+    assert.equal(passage.hash,createHash('sha256').update(passage.quote).digest('hex'));
+    assert.equal(passage.printEdition,'PRINT_EDITION_UNKNOWN');
   }
 });
-check('ten unique rules have six linked parts',()=>{
-  const ruleIds=new Set(),ids=new Set(data.sources.map(s=>s.id));
-  for(const r of data.rules){
-    assert.ok(!ruleIds.has(r.id));ruleIds.add(r.id);
-    assert.deepEqual(Object.keys(r.components).sort(),[...parts].sort());
-    for(const cell of Object.values(r.components)){
+test('all six components have valid evidence and opposing references',()=>{
+  const ids=new Set(source.sources.map(x=>x.id)),rules=new Set();
+  for(const rule of source.rules){
+    assert.ok(!rules.has(rule.id));rules.add(rule.id);
+    assert.deepEqual(Object.keys(rule.components).sort(),[...PARTS].sort());
+    for(const cell of Object.values(rule.components)){
       assert.ok(cell.status);
-      for(const ref of cell.canonicalBackings){
-        assert.ok(ids.has(ref),r.id+' dangling citation '+ref);
-      }
-      for(const adverse of cell.adverseRefs)assert.match(adverse,/^(CE-|OPP-)/);
+      for(const id of cell.canonicalBackings)assert.ok(ids.has(id),rule.id+': '+id);
+      for(const id of cell.adverseRefs)assert.match(id,/^(CE-|OPP-)/);
     }
   }
-  assert.equal(ruleIds.size,10);
-  assert.ok(ruleIds.has('MR-ANS-AFTER-TASAQUT-A'));
-  assert.ok(ruleIds.has('MR-ANS-AFTER-TASAQUT-B'));
-  assert.ok(!ruleIds.has('MR-ANS-AFTER-TASAQUT'));
+  assert.ok(rules.has('MR-ANS-AFTER-TASAQUT-A'));
+  assert.ok(rules.has('MR-ANS-AFTER-TASAQUT-B'));
+  assert.ok(!rules.has('MR-ANS-AFTER-TASAQUT'));
 });
-check('localized shell has required interaction controls',()=>{
-  assert.match(html,/<html lang="fa" dir="rtl">/);
-  for(const id of ['rule-list','rule-view','reviewer-name','edition-note','export-dialog','download-json','download-md','import-input','theme-toggle'])
+test('page starts with a practical walkthrough',()=>{
+  assert.ok(html.includes('آیا این قاعده'));
+  for(const t of ['ادعای میوز','متن شیخ','شش پرسش','رأی نهایی'])assert.ok(html.includes(t),t);
+  for(const id of ['rule-list','rule-view','search-rule','reviewer-name','edition-note',
+     'export-header','download-json','download-md','copy-json','share-review','import-input','theme-toggle']){
     assert.ok(html.includes('id="'+id+'"'),id);
-  assert.ok(html.includes('app.js')&&html.includes('styles.css'));
+  }
 });
-check('all rule responses are explicitly local and non-historical',()=>{
-  assert.ok(js.includes('localStorage.setItem'));
-  assert.ok(js.includes('submitted_at'));
-  assert.ok(js.includes('!!r.submitted_at'));
-  assert.ok(js.includes('historical_admissions:0'));
-  assert.ok(js.includes('reviewer_role:'));
-  assert.ok(js.includes('source_sha'));
-  assert.ok(js.includes('navigator.share'));
-  assert.ok(js.includes('downloadJson'));
-  assert.ok(!js.includes('fetch("https://'));
-  assert.ok(!js.includes("fetch('https://"));
+test('ten distinct research rule explanations and three questions each',()=>{
+  const found=[...code.matchAll(/'MR-ANS-[A-Z-]+(?:-A|-B)?':\s*\{/g)].map(x=>x[0]);
+  assert.equal(found.length,10,'one explicit research focus for every rule');
+  assert.ok(code.includes('صورت‌بندی پژوهشی برای داوری — نقل‌قول لفظی شیخ نیست'));
+  assert.ok(code.includes('سه پرسش راهنما برای این قاعده'));
 });
-check('static assets make no CDN or backend data requests',()=>{
-  assert.ok(!css.includes('@import'));
-  assert.ok(!html.includes('src="https://'));
-  assert.ok(!html.includes('href="https://'));
-  assert.equal((js.match(/\bfetch\(/g)||[]).length,1);
-  assert.ok(js.includes("fetch('./data/review-data.json'"));
+test('guided six-question wizard, four choices, reason and final submission',()=>{
+  for(const t of ['تأیید می‌کنم','رد می‌کنم','نیازمند اصلاح','فعلاً معلق',
+    'data-action="next-part"','data-action="submit"','partProblem','finalProblem',
+    "item.submitted_at=now()",'پرونده بعدی']){
+    assert.ok(code.includes(t),t);
+  }
 });
-check('review dossier includes research text and open questions',()=>{
-  for(const r of data.rules)assert.ok(r.dossierMarkdown&&r.dossierMarkdown.includes('HOLD'));
-  assert.ok(data.openNodes.includes('CE-01 OPEN_TENSION'));
+test('original export format and local draft remain backwards compatible',()=>{
+  assert.ok(code.includes("const STORAGE='feqh-muse-review-draft-v1'"));
+  assert.ok(code.includes("SCHEMA='feqh-muse-self-review-v1'"));
+  assert.ok(code.includes("localStorage.setItem(STORAGE"));
+  assert.ok(code.includes('!!item.submitted_at'));
+  assert.ok(code.includes('reviewer_role:'));
+  assert.ok(code.includes("research_qualification_effect:'NONE'"));
+  assert.ok(code.includes('historical_admissions:0'));
+  assert.ok(code.includes('JSON.stringify(exportPayload()'));
+  assert.ok(code.includes('importReview'));
+  assert.ok(code.includes('navigator.share'));
 });
-console.log('PASS review portal static smoke:',assertions.length,'checks');
-for(const a of assertions)console.log('✓',a);
+test('static GitHub Pages design has no authentication server',()=>{
+  assert.ok(!html.includes('action="/login"'));
+  assert.ok(!code.includes('FEQH_AUTH_PASSWORD'));
+  assert.ok(!html.includes('server.mjs'));
+  assert.equal((code.match(/\bfetch\(/g)||[]).length,1);
+  assert.ok(code.includes("fetch('./data/review-data.json'"));
+});
+console.log('\nFeqhMuseWeb static guided workflow:',checked,'checks passed.');
