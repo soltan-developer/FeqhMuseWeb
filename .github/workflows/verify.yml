@@ -1,0 +1,25 @@
+name: Verify FeqhMuseWeb
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+jobs:
+  review-portal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate JavaScript syntax
+        run: node --check app.js
+      - name: Verify evidence IDs, data integrity and UI
+        run: node tests/smoke.mjs
+      - name: Ensure required Pages assets exist
+        run: |
+          test -s index.html
+          test -s styles.css
+          test -s app.js
+          test -s data/review-data.json
