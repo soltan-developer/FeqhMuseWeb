@@ -34,8 +34,8 @@ const assets = new Map([
   ['/data/review-data.json', {file:'data/review-data.json', type:'application/json; charset=utf-8'}],
 ]);
 if (!Number.isInteger(port) || port < 1 || port > 65535) throw Error('PORT must be 1..65535');
-if (password.length < 16 || Buffer.byteLength(password,'utf8') > 1024)
-  throw Error('FEQH_AUTH_PASSWORD is required and must contain 16..1024 UTF-8 bytes');
+if (password.length < 16 || Buffer.byteLength(password,'utf8') > 1024 || /REPLACE|CHANGE_ME|PASSWORD_HERE|EXAMPLE/i.test(password))
+  throw Error('FEQH_AUTH_PASSWORD must be a real unique secret (16..1024 UTF-8 bytes); example placeholders are rejected');
 if (!username || username.length > 96) throw Error('Invalid FEQH_AUTH_USERNAME');
 if (allowHttpDev && !['127.0.0.1','::1','localhost'].includes(host))
   throw Error('FEQH_ALLOW_HTTP_DEV=1 is only permitted on loopback. Disable it in production.');
