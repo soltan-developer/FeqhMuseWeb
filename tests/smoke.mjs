@@ -70,7 +70,7 @@ test('ten distinct research rule explanations and three questions each',()=>{
 test('guided six-question wizard, four choices, reason and final submission',()=>{
   for(const t of ['تأیید می‌کنم','رد می‌کنم','نیازمند اصلاح','فعلاً معلق',
     'data-action="next-part"','data-action="submit"','partProblem','finalProblem',
-    "review(selected).submitted_at=now()",'پرونده بعدی']){
+    "review(selected).submitted_at=now()",'قاعده بعدی']){
     assert.ok(code.includes(t),t);
   }
 });
