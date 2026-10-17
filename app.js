@@ -457,15 +457,24 @@
     draft=fresh();
     draft.reviewer=String(input.reviewer||'').slice(0,160);
     draft.edition_note=String(input.edition_note||'').slice(0,350);
+    const legacyInput=input.review_target!=='STEP1_CORRECTED_CANDIDATE'||
+      input.cases.some(row=>row.verdict_target!=='HUMAN_VERDICT_ON_CODEX_CORRECTED_PROPOSAL');
+    draft.migrated_from_c4=legacyInput||!!input.previous_c4_reviews_migrated;
     for(const row of input.cases){
-      const r=review(row.rule_key);
-      r.decision=validVote(row.outcome);
-      r.reason=String(row.reason||'').slice(0,20000);
+      const previous={decision:validVote(row.outcome),reason:String(row.reason||'').slice(0,20000),parts:{},
+        updated_at:row.updated_at||null,submitted_at:row.submitted_at||null};
       for(const p of PARTS){
         const x=row.parts?.[p.key]||{};
-        r.parts[p.key]={decision:validVote(x.outcome),reason:String(x.reason||'').slice(0,20000)};
+        previous.parts[p.key]={decision:validVote(x.outcome),reason:String(x.reason||'').slice(0,20000)};
       }
-      r.updated_at=row.updated_at||now();r.submitted_at=row.submitted_at||null;
+      if(legacyInput){
+        draft.legacy_reviews[row.rule_key]=previous;
+        continue;
+      }
+      if(row.previous_c4_draft)draft.legacy_reviews[row.rule_key]=row.previous_c4_draft;
+      const r=review(row.rule_key);
+      r.decision=previous.decision;r.reason=previous.reason;
+      r.parts=previous.parts;r.updated_at=previous.updated_at;r.submitted_at=previous.submitted_at;
     }
     save();$('reviewer-name').value=draft.reviewer;$('edition-note').value=draft.edition_note;list();render();
   }
