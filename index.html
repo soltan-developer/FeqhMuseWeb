@@ -5,11 +5,12 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#f5f7fa">
   <meta name="description" content="محیط راهنمایی‌شده بررسی علمی قواعد اجتهادی شیخ انصاری: مطالعه ادعا، سنجش شواهد و ثبت رأی با استدلال.">
-  <title>داوری علمی قواعد | فقه میوز</title>
+  <title>داوری انسانی پس از ممیزی Step 1 | فقه میوز</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="step1.css">
   <script src="app.js" defer></script>
 </head>
 <body>
@@ -58,13 +59,13 @@
 
     <main class="main" id="main-content">
       <section class="welcome" aria-labelledby="welcome-title">
-        <div class="welcome-tag">محیط اختصاصی داوری پژوهشگر اصلی · فاز C4</div>
-        <h1 id="welcome-title">آیا این قاعده <span>واقعاً روش شیخ انصاری است؟</span></h1>
-        <p>میوز از آثار شیخ، ۱۰ قاعده احتمالی استخراج کرده است. شما قرار است <strong>درستیِ این برداشت‌ها را بسنجید</strong>؛ نه اینکه صرفاً یک فرم را پر کنید. هر پرونده را همراه با شاهد می‌خوانید، درباره شش سؤال روشن نظر می‌دهید و در پایان رأی مستدل ثبت می‌کنید.</p>
+        <div class="welcome-tag">نسخه دوم · تلفیق پژوهش C4 با ممیزی Step 1</div>
+        <h1 id="welcome-title">از برداشت میوز تا <span>داوری مستدل شما</span></h1>
+        <p>میوز ۱۰ قاعده پیشنهادی استخراج کرده و Codex در Step 1 برای هر قاعده و شش جزء آن نقد مستندی نوشته است. حالا <strong>نظر شما مستقل از رأی ماشین</strong> ثبت می‌شود: ابتدا ادعای اولیه، سپس نقد و اصلاح پیشنهادی، بعد سندها و در پایان داوری شخصی شما.</p>
         <div class="how-row" aria-label="مراحل کار">
           <div class="how-step"><b>۱</b><span><strong>ادعای میوز</strong><small>چه چیزی از شیخ برداشت شده؟</small></span></div>
-          <div class="how-step"><b>۲</b><span><strong>متن شیخ</strong><small>کدام عبارت پشتوانه ادعاست؟</small></span></div>
-          <div class="how-step"><b>۳</b><span><strong>شش پرسش</strong><small>نظر دقیق شما درباره اجزای قاعده</small></span></div>
+          <div class="how-step"><b>۲</b><span><strong>ممیزی Codex</strong><small>کجا تأیید یا نقد کرده و چرا؟</small></span></div>
+          <div class="how-step"><b>۳</b><span><strong>شش پرسش انسانی</strong><small>سند و نقد هر جزء در کنار رأی شما</small></span></div>
           <div class="how-step"><b>۴</b><span><strong>رأی نهایی</strong><small>تأیید، رد، اصلاح یا تعلیق با دلیل</small></span></div>
         </div>
       </section>
@@ -73,7 +74,7 @@
         <label class="input-field"><span>نام پژوهشگر <em>*</em></span><input id="reviewer-name" type="text" autocomplete="name" placeholder="نام و نام خانوادگی"></label>
         <label class="input-field"><span>چاپ مورد بررسی <small>(اختیاری)</small></span><input id="edition-note" type="text" placeholder="اگر چاپ مشخص نیست، خالی بگذارید"></label>
       </section>
-      <div class="caution"><strong>مرز علمی پژوهش:</strong> این‌ها «قاعده پیشنهادی» هستند، نه رأی اثبات‌شده شیخ. نقل‌های ارائه‌شده کوتاه‌اند، صفحات از دیتابیس کتاب هستند و چاپ نهایی هنوز تطبیق نشده است. نظرات شما به‌صورت خودکار وارد موتور نمی‌شوند.</div>
+      <div class="caution"><strong>مرز علمی پژوهش:</strong> داده‌های Step 1 محصول «ممیزی ماشینی Codex» هستند، نه نظر انسانی شما. متن‌های رکوردِ منتشرشده جای مقابله با نسخه چاپی را نمی‌گیرند. در گزارش فنی ۳۴ برش نقل موفق اما <code>recordHashMatches</code> برای ۳۴/۳۴ مورد <code>false</code> ثبت شده است؛ این اختلاف همچنان باز است. تأیید شما قاعده را خودکار وارد موتور نمی‌کند.</div>
 
       <section id="rule-view" class="rule-view" aria-live="polite" aria-label="پرونده مورد ارزیابی">
         <div class="loading">در حال آماده‌سازی پرونده‌های علمی…</div>
@@ -99,6 +100,7 @@
     <p class="muted-small">ارسال خودکار وجود ندارد. هیچ داده‌ای از یادداشت‌های شما به مخزن GitHub فرستاده نمی‌شود.</p>
   </div>
 </dialog>
+<dialog id="record-dialog" class="modal record-dialog" aria-labelledby="record-dialog-title"><div class="modal-content"><button type="button" id="close-record-dialog" class="modal-close" aria-label="بستن متن رکورد">×</button><div class="section-eyebrow">متن گسترده‌تر از بسته Step 1</div><h2 id="record-dialog-title">رکورد منبع</h2><p id="record-dialog-meta" class="muted"></p><pre id="record-dialog-body" class="record-full-text"></pre><p class="muted-small">این متن از داده دیجیتال پژوهش است؛ مقابله با تصویر چاپ هنوز تکمیل نشده است.</p></div></dialog>
 <input id="import-input" type="file" accept=".json,application/json" hidden>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 </body>
