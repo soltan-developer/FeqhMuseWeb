@@ -55,7 +55,7 @@ test('all six components have valid evidence and opposing references',()=>{
   assert.ok(!rules.has('MR-ANS-AFTER-TASAQUT'));
 });
 test('page starts with a practical walkthrough',()=>{
-  assert.ok(html.includes('آیا این قاعده'));
+  assert.ok(html.includes('از برداشت میوز تا'));
   for(const t of ['ادعای میوز','ممیزی Codex','شش پرسش انسانی','رأی نهایی'])assert.ok(html.includes(t),t);
   for(const id of ['rule-list','rule-view','search-rule','reviewer-name','edition-note',
      'export-header','download-json','download-md','copy-json','share-review','import-input','theme-toggle']){
