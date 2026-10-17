@@ -1,0 +1,61 @@
+/* Feqh Muse review v2: secondary machine-audit evidence vs independent human decision */
+:root{--audit:#315d84;--audit-bg:#edf5fb;--human:#0b755b;--human-bg:#eaf8f1}
+:root.dark{--audit:#9bc7ee;--audit-bg:#19354d;--human:#9cdbbe;--human-bg:#173b32}
+.stepper{grid-template-columns:repeat(4,minmax(0,1fr))}
+.stepper button{min-height:54px;line-height:1.6}
+.welcome{padding:24px 28px}.welcome>p{max-width:1020px}.how-row{margin-top:16px}
+.caution{font-size:12px;line-height:2.15}
+.audit-brief{background:var(--audit-bg);border:1px solid var(--audit);border-radius:13px;padding:15px;margin:12px 0}
+.audit-brief .kicker{color:var(--audit);font-size:11px;font-weight:800}
+.audit-brief strong{display:block;color:var(--ink);margin:5px 0 2px;font-size:13px}
+.audit-brief p{font-size:12px;line-height:2.2;color:var(--ink);margin:5px 0;white-space:pre-wrap}
+.audit-brief .audit-source{display:block;font-size:10px;color:var(--sub);margin-top:6px}
+.audit-brief .decision-marker{display:inline-block;font-size:11px;font-weight:800;border-radius:7px;padding:3px 9px;margin:3px 0;color:var(--audit);background:var(--paper)}
+.audit-title{font-size:19px;font-weight:900;margin:0 0 9px}
+.audit-intro{font-size:12px;color:var(--sub);line-height:2.3}
+.audit-comparison{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-top:14px}
+.audit-panel{background:var(--paper-alt);border:1px solid var(--line);border-radius:13px;padding:18px}
+.audit-panel h4{margin:0 0 10px;font-size:14px}
+.audit-panel p{font-size:13px;line-height:2.35;margin:7px 0;white-space:pre-wrap}
+.audit-panel.codex{border-color:var(--audit)}
+.audit-panel.codex h4{color:var(--audit)}
+.audit-panel.muse h4{color:var(--sub)}
+.audit-revised{border:1px solid var(--human);background:var(--human-bg);border-radius:15px;padding:20px;margin:17px 0}
+.audit-revised h4{color:var(--human);font-size:12px;margin:0 0 8px}
+.audit-revised p{font-size:16px;font-weight:700;line-height:2.35;white-space:pre-wrap;margin:0}
+.audit-checklist{display:grid;gap:8px}
+.audit-check{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:11px;align-items:start;border:1px solid var(--line);border-radius:12px;background:var(--paper-alt);padding:13px}
+.audit-check p{color:var(--sub);font-size:11px;margin:4px 0;line-height:2.1}
+.audit-check h4{font-size:12px;margin:0}
+.audit-check .pill{font-size:10px}
+.audit-findings{display:grid;gap:9px}
+.audit-ref-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:11px 0}
+.record-chip{display:inline-block;font:600 11px var(--font);padding:7px 11px;border-radius:8px;border:1px solid var(--line-dark);background:var(--paper);color:var(--audit);cursor:pointer;direction:ltr;unicode-bidi:plaintext}
+.record-chip:hover{border-color:var(--audit);background:var(--audit-bg)}
+.record-dialog{max-width:min(910px,calc(100vw - 22px));width:min(910px,calc(100vw - 22px));max-height:min(90vh,980px)}
+.record-dialog .modal-content{padding:25px 30px}
+.record-full-text{white-space:pre-wrap;overflow-wrap:anywhere;font:600 15px/2.5 var(--font);direction:rtl;text-align:right;border-radius:13px;border:1px solid var(--line);background:var(--paper-alt);color:var(--ink);padding:20px;max-height:62vh;overflow-y:auto}
+.machine-note{background:var(--audit-bg);border-right:4px solid var(--audit);padding:13px 15px;border-radius:10px;margin:14px 0;font-size:12px;color:var(--ink)}
+.machine-note h4{color:var(--audit);margin:0 0 5px;font-size:13px}
+.machine-note p{margin:3px 0;line-height:2.3;font-size:12px;white-space:pre-wrap}
+.human-check{background:var(--human-bg);border-right:4px solid var(--human);padding:11px 14px;margin:12px 0;border-radius:10px;font-size:12px}
+.human-check strong{color:var(--human)}
+.human-check p{margin:5px 0;font-size:11px}
+.human-vote-options{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.audit-matrix{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.audit-matrix-item{background:var(--paper-alt);padding:15px;border:1px solid var(--line);border-radius:12px}
+.audit-matrix-item b{display:block;font-size:12px;margin-bottom:3px}
+.audit-matrix-item p{color:var(--sub);font-size:11px;line-height:2.1;margin:6px 0}
+.audit-matrix-item button{margin-top:6px}
+.final-compare{background:var(--audit-bg);border:1px solid var(--audit);border-radius:12px;padding:15px;margin-bottom:15px}
+.final-compare strong{color:var(--audit)}
+.final-compare p{line-height:2.25;font-size:12px;margin:5px 0}
+.final-human-title{color:var(--human)}
+.quality-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.quality-grid>div{border:1px solid var(--line);border-radius:9px;background:var(--paper-alt);padding:12px}
+.quality-grid b{display:block;font-size:22px;color:var(--ink)}.quality-grid small{color:var(--sub);font-size:10px}
+.badge-machine{font-size:10px;background:var(--audit-bg);color:var(--audit);border-radius:8px;padding:3px 8px;display:inline-block;margin-inline-start:6px}
+.machine-link{color:var(--audit);font-size:11px}
+.notice-gap{display:block;margin:12px 0}
+@media(max-width:900px){.audit-comparison,.audit-matrix{grid-template-columns:1fr}.quality-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:620px){.welcome{padding:19px 14px}.stepper{gap:4px}.stepper button{font-size:9px;padding:8px 2px;min-height:59px}.stepper button span{display:block}.audit-panel{padding:14px}.audit-revised{padding:15px}.audit-revised p{font-size:14px}.audit-check{display:block}.audit-check .pill{margin-top:8px}.record-full-text{font-size:13px;padding:12px;max-height:58vh}.record-dialog .modal-content{padding:18px}.quality-grid{grid-template-columns:repeat(3,1fr)}}
