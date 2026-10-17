@@ -102,6 +102,14 @@ check('human vote is never initialized from machine findings',()=>{
   assert.ok(!app.includes('decision=audit'));
   assert.ok(app.includes("p.reason.trim().length>=12"));
 });
+check('old C4 drafts never become approvals of revised Step1 proposals',()=>{
+  assert.ok(app.includes("review_target:'STEP1_CORRECTED_CANDIDATE'"));
+  assert.ok(app.includes("legacyScope=raw.review_target!=='STEP1_CORRECTED_CANDIDATE'"));
+  assert.ok(app.includes("if(!source||typeof source!=='object'||legacyScope)continue"));
+  assert.ok(app.includes("previous_c4_draft:"));
+  assert.ok(app.includes("draft.legacy_reviews[row.rule_key]=previous"));
+  assert.ok(app.includes("legacyInput=input.review_target!=='STEP1_CORRECTED_CANDIDATE'"));
+});
 check('static site does not require auth proxy and has no outbound write code',()=>{
   assert.ok(!app.includes('FEQH_AUTH_PASSWORD'));
   assert.ok(!html.includes('action="/login"'));
