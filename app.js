@@ -470,6 +470,7 @@
         if(a==='next-rule'){const index=REVIEW_ORDER.indexOf(selected);moveTo(REVIEW_ORDER[(index+1)%REVIEW_ORDER.length]);return;}
         if(a==='stage'){stage=act.dataset.stage;render();$('rule-view').scrollIntoView({behavior:'smooth',block:'start'});return;}
         if(a==='start-review'){stage='review';partIndex=0;render();$('rule-view').scrollIntoView({behavior:'smooth'});return;}
+        if(a==='open-record'){await openRecord(act.dataset.ref);return;}
         if(a==='all-sources'){showAll=true;render();return;}
         if(a==='less-sources'){showAll=false;render();return;}
         if(a==='part'){stage='review';partIndex=Number(act.dataset.index);render();$('rule-view').scrollIntoView({behavior:'smooth'});return;}
@@ -511,6 +512,7 @@
         $('export-dialog').showModal();return;
       }
       if(ev.target.closest('#close-dialog')){$('export-dialog').close();return;}
+      if(ev.target.closest('#close-record-dialog')){$('record-dialog').close();return;}
       if(ev.target.closest('#download-json')){downloadJson();return;}
       if(ev.target.closest('#download-md')){downloadMd();return;}
       if(ev.target.closest('#copy-json')){
@@ -528,6 +530,7 @@
         list();return;
       }
       if(ev.target===$('export-dialog'))$('export-dialog').close();
+      if(ev.target===$('record-dialog'))$('record-dialog').close();
     });
     document.addEventListener('input',ev=>{
       const el=ev.target;
@@ -548,11 +551,26 @@
     bind();
     if(localStorage.getItem('feqh-review-theme')==='dark')document.documentElement.classList.add('dark');
     try{
-      const response=await fetch('./data/review-data.json',{cache:'no-store'});
-      if(!response.ok)throw Error('HTTP '+response.status);
-      data=await response.json();
-      if(data.schema_version!=='feqh-scholar-review-portal-v1'||data.rules.length!==10||data.sources.length!==34||REVIEW_ORDER.some(id=>!ruleById(id)))
+      const paths=['./data/review-data.json','./research/step1/FINDINGS.json',
+        './research/step1/VERIFICATION.json','./research/step1/VERIFICATION_SUMMARY.json'];
+      const responses=await Promise.all(paths.map(path=>fetch(path,{cache:'no-store'})));
+      for(let i=0;i<responses.length;i++)if(!responses[i].ok)
+        throw Error('فایل پژوهشی بارگذاری نشد: '+paths[i]+' (HTTP '+responses[i].status+')');
+      const loaded=await Promise.all(responses.map(response=>response.json()));
+      [data,audit,verificationRows,verificationSummary]=loaded;
+      if(data.schema_version!=='feqh-scholar-review-portal-v1'||data.rules.length!==10||
+        data.sources.length!==34||REVIEW_ORDER.some(id=>!ruleById(id)))
         throw Error('ساختار بسته پژوهشی C4 معتبر نیست.');
+      if(audit.source_sha!==data.source_sha||!Array.isArray(audit.rules)||audit.rules.length!==10||
+        verificationRows.length!==34||verificationSummary.source_span_count!==34||
+        verificationSummary.repo_commit!==audit.repo_commit)
+        throw Error('مبنای C4 با گزارش Step 1 یکسان نیست؛ بارگذاری این ترکیب متوقف شد.');
+      for(const id of REVIEW_ORDER){
+        const rule=audited(id);
+        if(!rule||!rule.corrected||PARTS.some(p=>!rule.parts?.[p.key]||
+          !validVote(rule.parts[p.key].decision)||!Array.isArray(rule.parts[p.key].refs)))
+          throw Error('ممیزی شش‌گانه Step 1 برای '+id+' ناقص است.');
+      }
       data.rules.sort((a,b)=>REVIEW_ORDER.indexOf(a.id)-REVIEW_ORDER.indexOf(b.id));
       loadDraft();selected=REVIEW_ORDER.find(id=>!completion(id).complete)||REVIEW_ORDER[0];
       $('reviewer-name').value=draft.reviewer;$('edition-note').value=draft.edition_note;
