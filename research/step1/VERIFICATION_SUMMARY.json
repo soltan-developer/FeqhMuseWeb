@@ -1,0 +1,51 @@
+{
+  "date": "2026-10-17",
+  "repo_commit": "95ec62a5db37d3599d2e2461ffa19e05adab5444",
+  "research_source_sha": "c0b3aec123941d75f7f1d0bfc2263ba1fe1d4912",
+  "live_data_matches": true,
+  "live_app_matches": true,
+  "rule_count": 10,
+  "part_count": 60,
+  "source_span_count": 34,
+  "unique_record_count": 29,
+  "unique_db_page_count": 28,
+  "all_exact_checks_pass": true,
+  "books": [
+    {
+      "book": "12228",
+      "compressed_sha256": "ec23b0af5a66afd580913654c5a9a0eae16f4e54269d6bd0629c3d495358cae6",
+      "payload_sha256": "f9fbfee0e7d8217e08cb19d271ed124de84843e3ce8249bafbf06a05d2837a13",
+      "expected_payload_sha256": "f9fbfee0e7d8217e08cb19d271ed124de84843e3ce8249bafbf06a05d2837a13",
+      "payload_hash_matches": true,
+      "sqlite_integrity": [
+        {
+          "integrity_check": "ok"
+        }
+      ]
+    },
+    {
+      "book": "12227",
+      "compressed_sha256": "e54ec11a766e3249a223b0d1c6ca3b0a5e0cbaa480ffb9bdd8658608867275f1",
+      "payload_sha256": "ae240fce2c85a4728a8c444331c83bec9671909bc361ab3f49dd92ae566f968b",
+      "expected_payload_sha256": "ae240fce2c85a4728a8c444331c83bec9671909bc361ab3f49dd92ae566f968b",
+      "payload_hash_matches": true,
+      "sqlite_integrity": [
+        {
+          "integrity_check": "ok"
+        }
+      ]
+    },
+    {
+      "book": "1571",
+      "compressed_sha256": "e71e6084770ccfd7a73c19da8600d9e181bd24d3919b4066cd6d1f7286f0ff4a",
+      "payload_sha256": "2a741b118e03c5a62988601e54074d0793f450291b6e10692ec7e521a60f78a5",
+      "expected_payload_sha256": "2a741b118e03c5a62988601e54074d0793f450291b6e10692ec7e521a60f78a5",
+      "payload_hash_matches": true,
+      "sqlite_integrity": [
+        {
+          "integrity_check": "ok"
+        }
+      ]
+    }
+  ]
+}

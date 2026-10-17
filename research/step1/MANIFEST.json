@@ -1,0 +1,62 @@
+{
+  "schema": "feqh-muse-step1-manifest-v1",
+  "generated_at": "2026-10-17",
+  "repository_base_commit": "95ec62a5db37d3599d2e2461ffa19e05adab5444",
+  "files": [
+    {
+      "path": "EVIDENCE_CONTEXTS.md",
+      "bytes": 141718,
+      "sha256": "a5bf6ee580f1c814154ec4e23f76e3574268545b4b3624bc03c74d5fe10e96dc"
+    },
+    {
+      "path": "FINDINGS.json",
+      "bytes": 37072,
+      "sha256": "ae4578cc336517d24533035ff37144c75e747ad557ad53596ca2dfc430fbdf43"
+    },
+    {
+      "path": "METHODOLOGY.md",
+      "bytes": 3283,
+      "sha256": "fe235704f922cbe999d18a1f872db70b7003e662c7a86cc19b95dc247498207a"
+    },
+    {
+      "path": "README.md",
+      "bytes": 3112,
+      "sha256": "162112f3e283b0f32d460e569cc3c332109720b8dbed844be13016b9a4b1375c"
+    },
+    {
+      "path": "REPORT_FA.md",
+      "bytes": 65378,
+      "sha256": "8f5eb3ec6aa7882b43c7c6de2c870ff2c5d0112a08cdea3510564a2e351aa9d2"
+    },
+    {
+      "path": "SOURCE_DATA_SNAPSHOT.json",
+      "bytes": 72621,
+      "sha256": "8d966940256e6de241dadb12c5f1712a840367e44a680aa8633d6c340f155b31"
+    },
+    {
+      "path": "SOURCE_NOTES.json",
+      "bytes": 4782,
+      "sha256": "bf78a36de945a157a6cf0d577ba047b15aaf94eff79bfe2a9dfdc6cc94a1c992"
+    },
+    {
+      "path": "VERIFICATION.json",
+      "bytes": 12032,
+      "sha256": "0e2cac229d1a7e568d3de25045be3afb74fafd8581a41bae3b90faa84caade67"
+    },
+    {
+      "path": "VERIFICATION_SUMMARY.json",
+      "bytes": 1738,
+      "sha256": "a7e06b8dcc89899841d7669b80bc24b684bbe6c9c24831121369265c6dd3a669"
+    },
+    {
+      "path": "scripts/build-manifest.cjs",
+      "bytes": 1138,
+      "sha256": "9fefec14cfb07bf1be2ae1c91066342ff9342c79735044c1bb251eba8451686e"
+    },
+    {
+      "path": "scripts/verify-local.cjs",
+      "bytes": 2993,
+      "sha256": "15fe84077ae8403b3ab87b61422ea8df83ace762377ec5ce4f6727b26120f4ef"
+    }
+  ]
+}
