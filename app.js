@@ -11,7 +11,7 @@
     {key:'principle',name:'انتساب اصل قاعده',question:'آیا اصل این ادعا واقعاً رأی مختار شیخ انصاری است؟',help:'آیا جمله از خود شیخ است یا نقل نظر دیگران؟ آیا از متن تنها یک مثال به دست می‌آید یا یک ضابطه عام؟ تردید خود مؤلف را به حکم قطعی تبدیل نکنید.'}
   ];
   const VOTES=[
-    {id:'approve',name:'تأیید می‌کنم',sub:'برداشت و حدّ این جزء را می‌پذیرم.'},
+    {id:'approve',name:'تأیید می‌کنم',sub:'پس از بررسی متن و نقد Codex، این جزء را می‌پذیرم.'},
     {id:'reject',name:'رد می‌کنم',sub:'این برداشت از شواهد به دست نمی‌آید.'},
     {id:'revise',name:'نیازمند اصلاح',sub:'اصل قابل قبول است؛ اما تعبیر یا قیود غلط است.'},
     {id:'defer',name:'فعلاً معلق',sub:'برای تصمیم، شاهد یا تحقیق بیشتری لازم است.'}
@@ -65,6 +65,7 @@
     'MR-ANS-STOP-BOUND','MR-ANS-AFTER-TASAQUT-B','MR-ANS-AFTER-TASAQUT-A','MR-ANS-JIHA-BOUND'
   ];
   let data,draft,selected,stage='read',partIndex=0,filter='all',search='',showAll=false,toastTimer;
+  let audit=null,verificationSummary=null,verificationRows=[],contextMap=null;
   const $=id=>document.getElementById(id);
   const safe=value=>String(value==null?'':value).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
   const now=()=>new Date().toISOString();
@@ -149,6 +150,65 @@
     for(const ref of rule.additionalBackings||[])seen.add(ref);
     return [...seen];
   }
+
+  // Research Step 1 is a MACHINE audit and is never silently copied into human votes.
+  function audited(ruleId){return audit?.rules?.find(x=>x.id===ruleId)||null;}
+  function auditedPart(ruleId,key){return audited(ruleId)?.parts?.[key]||null;}
+  function machineState(v){
+    return ({approve:'تأیید مقیدِ Codex',revise:'اصلاح پیشنهادی Codex',reject:'رد پیوند شاهد توسط Codex',defer:'تعلیق پیشنهادشده Codex'})[v]||'نظر ماشینی نامشخص';
+  }
+  function recordButtons(refs){
+    if(!refs?.length)return '<span class="tiny-note">شاهد افزوده ثبت نشده است.</span>';
+    return '<div class="audit-ref-row">'+[...new Set(refs)].map(ref=>{
+      if(!/^\d+:\d+$/.test(ref))return '<span class="pill amber">'+safe(ref)+'</span>';
+      return '<button type="button" class="record-chip" data-action="open-record" data-ref="'+safe(ref)+'" title="خواندن متن گسترده این رکورد">'+safe(ref)+' ↗</button>';
+    }).join('')+'</div>';
+  }
+  async function openRecord(ref){
+    if(!/^\d+:\d+$/.test(ref))return;
+    $('record-dialog-title').textContent='در حال دریافت متن '+ref+'…';
+    $('record-dialog-meta').textContent='منبع: research/step1/EVIDENCE_CONTEXTS.md';
+    $('record-dialog-body').textContent='در حال بارگذاری متن گسترده رکورد…';
+    $('record-dialog').showModal();
+    try{
+      if(!contextMap){
+        const response=await fetch('./research/step1/EVIDENCE_CONTEXTS.md',{cache:'no-store'});
+        if(!response.ok)throw Error('دریافت متن رکوردها ناموفق بود: '+response.status);
+        const full=await response.text();
+        const matches=[...full.matchAll(/^## (فرائد الأصول، ج[۱۲]|المکاسب، ج۱)، رکورد (\d+)،[^\n]*/gm)];
+        const map=new Map();
+        matches.forEach((m,i)=>{
+          const book=m[1].startsWith('المکاسب')?'1571':m[1].includes('ج۱')?'12227':'12228';
+          const start=m.index+m[0].length;
+          const stop=i+1<matches.length?matches[i+1].index:full.length;
+          map.set(book+':'+m[2],{heading:m[0].replace(/^## /,''),body:full.slice(start,stop).trim()});
+        });
+        contextMap=map;
+      }
+      const passage=contextMap.get(ref);
+      if(!passage)throw Error('این رکورد در ۵۸ متن منتشرشده Step 1 یافت نشد.');
+      $('record-dialog-title').textContent='رکورد '+ref;
+      $('record-dialog-meta').textContent=passage.heading;
+      $('record-dialog-body').textContent=passage.body;
+    }catch(error){
+      $('record-dialog-title').textContent='امکان نمایش رکورد نیست';
+      $('record-dialog-body').textContent=String(error.message);
+    }
+  }
+  function machineSnippet(rule){
+    const x=audited(rule.id);
+    if(!x)return '<div class="warning">گزارش Step 1 برای این قاعده بارگذاری نشده است؛ رأی انسانی را بدون نسبت‌دادن نتیجه به Codex ثبت کنید.</div>';
+    return '<div class="audit-brief"><span class="kicker">جمع‌بندی ماشین · Step 1 · هنوز رأی شما نیست</span>'+
+      '<span class="decision-marker">'+safe(x.verdict)+'</span><strong>چکیده نقد</strong><p>'+safe(x.claim)+'</p>'+
+      '<button type="button" class="button button-outline button-small" data-action="stage" data-stage="audit">مشاهده تحلیل و اسناد Codex ←</button>'+
+      '<small class="audit-source">مبنای گزارش: research/step1/FINDINGS.json · '+safe(audit.reviewer)+'</small></div>';
+  }
+  function technicalLimitations(){
+    const hashFalse=verificationRows.filter(x=>x.recordHashMatches===false).length;
+    return '<div class="warning"><strong>وضعیت اعتبار منابع:</strong> گزارش Step 1 موفقیت تطبیق ۳۴ نقل کوتاه با داده دیجیتال را ادعا می‌کند، ولی '+hashFalse+
+      ' مقدار <code>recordHashMatches=false</code> در فایل جزئی دارد. این ناسازگاری فنی حل نشده است. تصویر چاپ مقابله نشده و مدارک کامل CE-01 / CE-05 / CE-06 نیز در این بسته موجود نیستند.</div>';
+  }
+
   function steps(){
     return '<div class="stepper" aria-label="مسیر داوری"><button type="button" data-action="stage" data-stage="read" class="'+(stage==='read'?'active':'')+'"><span>۱</span> ادعا و شواهد</button>'+
       '<button type="button" data-action="stage" data-stage="review" class="'+(stage==='review'?'active':'')+'"><span>۲</span> شش پرسش علمی</button>'+
