@@ -17,10 +17,15 @@ jobs:
         run: node --check app.js
       - name: Verify Persian guided review and C4 evidence
         run: node tests/smoke.mjs
+      - name: Audit Step1 integrity, 10 rules and 60 parts
+        run: node tests/step1-integration.mjs
       - name: Ensure only static Pages assets are needed
         run: |
           test -s index.html
           test -s styles.css
+          test -s step1.css
+          test -s research/step1/FINDINGS.json
+          test -s research/step1/EVIDENCE_CONTEXTS.md
           test -s app.js
           test -s data/review-data.json
           test ! -f server.mjs
