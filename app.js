@@ -210,9 +210,10 @@
   }
 
   function steps(){
-    return '<div class="stepper" aria-label="مسیر داوری"><button type="button" data-action="stage" data-stage="read" class="'+(stage==='read'?'active':'')+'"><span>۱</span> ادعا و شواهد</button>'+
-      '<button type="button" data-action="stage" data-stage="review" class="'+(stage==='review'?'active':'')+'"><span>۲</span> شش پرسش علمی</button>'+
-      '<button type="button" data-action="stage" data-stage="final" class="'+(stage==='final'?'active':'')+'"><span>۳</span> رأی نهایی</button></div>';
+    const options=[['read','۱','ادعای اولیه'],['audit','۲','نقد Codex'],['review','۳','داوری شش محور'],['final','۴','رأی انسانی']];
+    return '<div class="stepper" aria-label="مراحل پژوهش و داوری">'+options.map(x=>
+      '<button type="button" data-action="stage" data-stage="'+x[0]+'" class="'+(stage===x[0]?'active':'')+'" aria-current="'+(stage===x[0]?'step':'false')+'"><span>'+x[1]+'</span> '+x[2]+'</button>'
+    ).join('')+'</div>';
   }
   function render(){
     const rule=ruleById(selected),comp=completion(selected),number=REVIEW_ORDER.indexOf(selected)+1;
@@ -224,6 +225,7 @@
       '<div class="rule-action"><button type="button" class="button button-outline button-small" data-action="next-rule">قاعده بعدی ←</button></div></div>';
     let inside='';
     if(stage==='read')inside=readStage(rule);
+    if(stage==='audit')inside=auditStage(rule);
     if(stage==='review')inside=reviewStage(rule);
     if(stage==='final')inside=finalStage(rule);
     $('rule-view').innerHTML=top+steps()+inside;
@@ -250,8 +252,40 @@
       (risks?'<div class="card"><h3>ابهام‌هایی که نباید نادیده بگیرید</h3><ul class="question-list">'+risks+'</ul></div>':'')+
       '<div class="card"><div class="section-eyebrow">قدم بعد</div><h3>اکنون شش سؤال روشن را پاسخ دهید</h3>'+
       '<p class="muted">در هر سؤال، عبارت مرتبط کنار پرسش نمایش داده می‌شود. اگر مدرک کافی ندارید «فعلاً معلق» را بزنید و بگویید چه تحقیقی لازم است.</p>'+
-      '<button type="button" class="button button-primary" data-action="start-review">شروع داوری این قاعده ←</button></div>';
+      '<button type="button" class="button button-primary" data-action="stage" data-stage="audit">ابتدا نتیجه ممیزی Codex را ببینید ←</button></div>';
   }
+
+  function auditStage(rule){
+    const x=audited(rule.id);
+    if(!x)return '<section class="card">'+technicalLimitations()+'<p>گزارش ممیزی برای این قاعده هنوز در دسترس نیست.</p></section>';
+    const f=FOCUS[rule.id],mainRefs=recordButtons(x.refs||[]);
+    const matrix=PARTS.map(part=>{
+      const p=x.parts?.[part.key];
+      if(!p)return '<div class="audit-matrix-item"><b>'+safe(part.name)+'</b><p>این محور در گزارش فاقد داده است.</p></div>';
+      return '<article class="audit-matrix-item"><b>'+safe(part.name)+'</b>'+
+        '<span class="pill '+(p.decision==='reject'?'red':p.decision==='defer'?'amber':p.decision==='approve'?'green':'blue')+'">'+safe(machineState(p.decision))+'</span>'+
+        '<p>'+safe(p.reason)+'</p>'+recordButtons(p.refs)+
+        '<button type="button" class="button button-outline button-small" data-action="part" data-index="'+PARTS.indexOf(part)+'">بررسی انسانی این محور ←</button></article>';
+    }).join('');
+    return '<section class="card"><div class="section-eyebrow">گام دوم · گزارش Codex را نقد کنید، نه اینکه بی‌درنگ بپذیرید</div>'+
+      '<h3>Codex کدام بخشِ برداشت میوز را پذیرفته یا اصلاح کرده است؟</h3>'+
+      '<p class="audit-intro">این ارزیابی را مدل Codex انجام داده است. هر ۶ نتیجه آن «نظر پژوهشی ماشینی» است و هیچ‌کدام خودکار به‌عنوان رأی شما ثبت نمی‌شود.</p>'+
+      '<div class="audit-comparison"><article class="audit-panel muse"><h4>۱. صورت‌بندی اولیه میوز</h4><p>'+safe(f.claim)+'</p></article>'+
+      '<article class="audit-panel codex"><h4>۲. نتیجه بررسی Codex</h4>'+tag(x.verdict,'blue')+'<p>'+safe(x.claim)+'</p></article></div>'+
+      '<div class="audit-revised"><h4>۳. صورت اصلاح‌شده پیشنهادی Codex — این متن، ادعای جدید برای داوری شماست</h4><p>'+safe(x.corrected)+'</p></div>'+
+      '<div class="audit-panel codex"><h4>استدلال کلی Codex</h4><p>'+safe(x.reason)+'</p>'+
+      '<h4>ارجاع به رکوردهای متنی</h4>'+mainRefs+'</div></section>'+
+      '<section class="card"><div class="section-eyebrow">برای هر جزء چه استدلالی ارائه شده؟</div><h3>جدول شش‌گانه گزارش Step 1</h3>'+
+      '<p class="muted">می‌توانید همین‌جا شواهد هر محور را باز کنید و سپس نظر خودتان را در مرحله سوم ثبت کنید. اختلاف شما با Codex، خطا محسوب نمی‌شود؛ با استدلال ثبتش کنید.</p>'+
+      '<div class="audit-matrix">'+matrix+'</div></section>'+
+      '<section class="card"><h3>محدودیت‌های گزارش که باید پیش چشم باشند</h3>'+
+      technicalLimitations()+
+      '<div class="summary-box"><h4>منشأ داده</h4><p>پرونده: '+safe(x.id)+' · ممیزی ماشین در '+safe(audit.date)+
+      ' · فایل <code>research/step1/FINDINGS.json</code> بر مبنای Commit '+safe(audit.repo_commit)+
+      '. فقط پس از بررسی خودتان، رأی انسانی جداگانه ثبت می‌شود.</p></div>'+
+      '<button type="button" class="button button-primary" data-action="start-review">من اسناد را خوانده‌ام؛ شروع داوری انسانی ←</button></section>';
+  }
+
   function reviewStage(rule){
     const part=PARTS[partIndex],cell=rule.components[part.key],rec=review(selected).parts[part.key],done=completion(selected).partsDone;
     const pager=PARTS.map((p,i)=>{
