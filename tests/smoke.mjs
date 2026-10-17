@@ -15,6 +15,7 @@ test('HTML/CSS/JS assets exist and scripts parse',()=>{
   assert.match(html,/<html lang="fa" dir="rtl">/);
   assert.match(html,/href="styles.css"/);
   assert.match(html,/src="app.js"/);
+  assert.match(html,/href="step1.css"/);
 });
 test('Vazirmatn is explicitly used by CSS and loaded in page',()=>{
   assert.match(css,/--font:'Vazirmatn'/);
@@ -55,7 +56,7 @@ test('all six components have valid evidence and opposing references',()=>{
 });
 test('page starts with a practical walkthrough',()=>{
   assert.ok(html.includes('آیا این قاعده'));
-  for(const t of ['ادعای میوز','متن شیخ','شش پرسش','رأی نهایی'])assert.ok(html.includes(t),t);
+  for(const t of ['ادعای میوز','ممیزی Codex','شش پرسش انسانی','رأی نهایی'])assert.ok(html.includes(t),t);
   for(const id of ['rule-list','rule-view','search-rule','reviewer-name','edition-note',
      'export-header','download-json','download-md','copy-json','share-review','import-input','theme-toggle']){
     assert.ok(html.includes('id="'+id+'"'),id);
@@ -90,7 +91,9 @@ test('static GitHub Pages design has no authentication server',()=>{
   assert.ok(!html.includes('action="/login"'));
   assert.ok(!code.includes('FEQH_AUTH_PASSWORD'));
   assert.ok(!html.includes('server.mjs'));
-  assert.equal((code.match(/\bfetch\(/g)||[]).length,1);
-  assert.ok(code.includes("fetch('./data/review-data.json'"));
+  assert.equal((code.match(/\bfetch\(/g)||[]).length,2);
+  assert.ok(code.includes("'./data/review-data.json'"));
+  assert.ok(code.includes("'./research/step1/FINDINGS.json'"));
+  assert.ok(code.includes("fetch('./research/step1/EVIDENCE_CONTEXTS.md'"));
 });
 console.log('\nFeqhMuseWeb static guided workflow:',checked,'checks passed.');
