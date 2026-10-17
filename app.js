@@ -323,7 +323,7 @@
       '<div class="warning">نکته نسخه‌شناختی: شماره صفحه مربوط به دیتابیس است، نه چاپ تصحیح‌شده.</div></aside></div></section>';
   }
   function finalStage(rule){
-    const rec=review(selected),done=completion(selected);
+    const rec=review(selected),done=completion(selected),machine=audited(rule.id);
     const cards=PARTS.map(part=>{
       const p=rec.parts[part.key],okay=partValid(p);
       return '<button type="button" class="answer-summary" data-action="part" data-index="'+PARTS.indexOf(part)+'"><strong>'+safe(part.name)+'</strong><span>'+safe(okay?voteName(p.decision):'هنوز کامل نشده')+' ←</span></button>';
@@ -332,12 +332,12 @@
       '<strong>'+safe(v.name)+'</strong><small>'+safe(v.sub)+'</small></button>').join('');
     let complete=done.complete?'<div class="complete-message"><strong>✓ داوری این پرونده ثبت شده است.</strong> رأی شما در همین مرورگر ذخیره شده و با دریافت JSON قابل تحویل است. این ثبت به معنی اجرای تاریخی قاعده نیست.</div>':'';
     return '<section class="card"><div class="section-eyebrow">گام سوم · تصمیم علمی خودتان</div><h3>جمع‌بندی قاعده: '+safe(rule.title)+'</h3>'+
-      '<p class="muted">میزان آمادگی: '+done.partsDone+' از ۶ محور پاسخ معتبر دارند. درباره کل قاعده نظر دهید؛ لزوماً رأی همه اجزا یکسان نیست.</p>'+
+      '<p class="muted">میزان آمادگی: '+done.partsDone+' از ۶ محور پاسخ مستدل دارند. درباره کل قاعده نظر دهید؛ لزوماً رأی همه اجزا یکسان نیست.</p>'+
       '<div class="final-grid">'+cards+'</div></section>'+
-      '<section class="card"><h3>رأی نهایی شما درباره این صورت‌بندی</h3>'+
-      '<p class="muted">تأیید یعنی برداشت فعلی را در حد شواهد موجود می‌پذیرید؛ رد یعنی قاعده به این صورت از روش شیخ درنمی‌آید؛ اصلاح یعنی نسخه پیشنهادی باید بازنویسی شود؛ تعلیق یعنی هنوز نیاز به تحقیق است.</p>'+
+      '<section class="card"><div class="section-eyebrow">اکنون جمع‌بندی مستقل شما</div><h3 class="final-human-title">رأی نهایی انسانی درباره این قاعده</h3>'+'<div class="final-compare"><strong>پیشنهاد Codex (صرفاً نظر ماشین):</strong><p>'+(machine?safe(machine.verdict)+' · '+safe(machine.corrected):'گزارش در دسترس نیست')+'</p></div>'+
+      '<p class="muted">تصمیم شما درباره <strong>صورت اصلاح‌شده پیشنهادی در گزارش Codex</strong> است. «تأیید» یعنی این تقریر را پس از مقابله با متون می‌پذیرید؛ «رد» یعنی قابل انتساب نیست؛ «اصلاح» یعنی متن دقیق‌تری پیشنهاد می‌کنید؛ «تعلیق» یعنی سند کافی ندارید. از رأی ماشین تقلید نکنید.</p>'+
       '<div class="decision-options">'+votes+'</div>'+
-      '<label for="final-reason" class="note-label">دلیل علمی تصمیم نهایی <span>(الزامی؛ دست‌کم ۱۲ نویسه)</span></label>'+
+      '<label for="final-reason" class="note-label">استدلال شما و در صورت اختلاف، توضیح درباره نقد Codex <span>(الزامی؛ دست‌کم ۱۲ نویسه)</span></label>'+
       '<textarea id="final-reason" class="note" data-input="final-reason" placeholder="به‌طور دقیق توضیح دهید کدام عبارت شیخ و کدام قید یا استثنا در نتیجه اثر داشته است. اگر اصلاح می‌کنید صورت صحیح قاعده را پیشنهاد دهید.">'+safe(rec.reason)+'</textarea>'+
       '<div class="step-foot"><button type="button" class="button button-outline" data-action="stage" data-stage="review">→ بازگشت به پرسش‌ها</button>'+
       '<button type="button" class="button button-primary" data-action="submit">ثبت نهایی داوری این قاعده</button></div>'+
@@ -380,6 +380,9 @@
   }
   function exportPayload(){
     return {review_schema:SCHEMA,source_sha:data.source_sha,book_commit:data.book_commit,
+      audit_stage:'step1',audit_file:'research/step1/FINDINGS.json',audit_reviewer:audit.reviewer,
+      audit_date:audit.date,audit_base_commit:audit.repo_commit,
+      verification_discrepancy:{record_hash_false_count:verificationRows.filter(x=>x.recordHashMatches===false).length,print_witness_checked:false},
       exported_at:now(),created_at:draft.created_at,reviewer:draft.reviewer,edition_note:draft.edition_note,
       reviewer_role:'PRIMARY_RESEARCHER_SELF_REVIEW_NOT_INDEPENDENT',
       research_qualification_effect:'NONE',historical_admissions:0,
@@ -388,6 +391,11 @@
         const r=review(rule.id);
         return {rule_key:rule.id,title:rule.title,grade_proposal:rule.grade,
           outcome:r.decision,reason:r.reason,complete:completion(rule.id).complete,
+          verdict_target:'HUMAN_VERDICT_ON_CODEX_CORRECTED_PROPOSAL',
+          machine_step1:(()=>{const a=audited(rule.id);return a?{reviewer:audit.reviewer,verdict:a.verdict,
+            claim:a.claim,corrected:a.corrected,reason:a.reason,
+            parts:Object.fromEntries(PARTS.map(p=>[p.key,{decision:a.parts[p.key].decision,
+              reason:a.parts[p.key].reason,refs:a.parts[p.key].refs}]))}:null;})(),
           parts:Object.fromEntries(PARTS.map(part=>[part.key,{
             outcome:r.parts[part.key].decision,reason:r.parts[part.key].reason,
             research_status:rule.components[part.key].status,
@@ -401,13 +409,18 @@
     let lines=['# صورت‌جلسه داوری پژوهشگر اصلی — فقه میوز','',
       '**داور:** '+(payload.reviewer||'هنوز درج نشده'), '**چاپ بررسی‌شده:** '+(payload.edition_note||'نامشخص'),
       '**تاریخ:** '+payload.exported_at,'**مبنای داده:** '+payload.source_sha,
-      '**وضعیت:** خودداوری علمی؛ بدون مجوز خودکار برای موتور تاریخی',''];
+      '**وضعیت:** خودداوری علمی؛ بدون مجوز خودکار برای موتور تاریخی',
+      '**مبنای ممیزی:** '+(payload.audit_file||'نامشخص')+' (Codex، نه داور انسانی)',
+      '**موضوع رأی انسان:** صورت‌بندی اصلاحیِ پیشنهادی Codex',
+      '**اختلاف هش رکورد:** '+(payload.verification_discrepancy?.record_hash_false_count||0)+' مقدار false (حل‌نشده)', ''];
     for(const item of payload.cases){
       lines.push('## '+item.title,'','شناسه: '+item.rule_key,'',
+        '**پیشنهاد Codex:** '+(item.machine_step1?.verdict||'فاقد گزارش'),'','**صورت اصلاح‌شده Codex:** '+(item.machine_step1?.corrected||'فاقد گزارش'),'',
         '**رأی کلی:** '+voteName(item.outcome),'','**دلیل:** '+(item.reason||'درج نشده'),'');
       for(const p of PARTS){
         const row=item.parts[p.key];
-        lines.push('### '+p.name,'','- رأی: '+voteName(row.outcome),
+        lines.push('### '+p.name,'','- ارزیابی Codex: '+(item.machine_step1?.parts?.[p.key]?machineState(item.machine_step1.parts[p.key].decision):'نامشخص'),
+          '- رأی انسانی: '+voteName(row.outcome),
           '- دلیل: '+(row.reason||'درج نشده'),'- شاهد: '+(row.canonical_source_refs.join('، ')||'ثبت نشده'),
           '- مخالف: '+(row.adverse_refs.join('، ')||'ثبت نشده'),'');
       }
