@@ -239,7 +239,7 @@
     const risks=Object.entries(rule.components).filter(([key,cell])=>cell.status==='UNKNOWN'||cell.status==='PARTIAL'||cell.adverseRefs.length).map(([key,cell])=>
       '<li><strong>'+safe(PARTS.find(p=>p.key===key).name)+':</strong> '+(cell.status==='UNKNOWN'?'هنوز مستند کافی گزارش نشده است.':cell.status==='PARTIAL'?'پشتوانه پژوهشی جزئی است.':'')+
       (cell.adverseRefs.length?' شاهد مخالف: '+safe(cell.adverseRefs.join('، '))+' (متن کامل آن در رجیستر حاضر نیست).':'')+'</li>').join('');
-    return '<div class="card"><div class="section-eyebrow">گام اول · اول بدانیم چه چیزی قرار است بررسی شود</div><h3>ادعای پیشنهادی میوز</h3>'+
+    return '<div class="card"><div class="section-eyebrow">گام اول · اول بدانیم چه چیزی قرار است بررسی شود</div><h3>خلاصه صورت‌بندی C4 برای بررسی</h3>'+
       '<div class="claim-box"><div class="label">صورت‌بندی پژوهشی برای داوری — نقل‌قول لفظی شیخ نیست</div><p>'+safe(f.claim)+'</p></div>'+
       '<p class="muted">در این پرونده قرار نیست درباره درستی خود فقه یا حکم شرعی نظر بدهید؛ باید بسنجید که <b>آیا این صورت‌بندی با تقریر و عمل روشی شیخ انصاری مطابق است؟</b></p>'+
       '<div class="two-cols"><div class="info-item"><h4>سه پرسش راهنما برای این قاعده</h4><ol class="question-list">'+issueList+'</ol></div>'+
@@ -270,7 +270,7 @@
     return '<section class="card"><div class="section-eyebrow">گام دوم · گزارش Codex را نقد کنید، نه اینکه بی‌درنگ بپذیرید</div>'+
       '<h3>Codex کدام بخشِ برداشت میوز را پذیرفته یا اصلاح کرده است؟</h3>'+
       '<p class="audit-intro">این ارزیابی را مدل Codex انجام داده است. هر ۶ نتیجه آن «نظر پژوهشی ماشینی» است و هیچ‌کدام خودکار به‌عنوان رأی شما ثبت نمی‌شود.</p>'+
-      '<div class="audit-comparison"><article class="audit-panel muse"><h4>۱. صورت‌بندی اولیه میوز</h4><p>'+safe(f.claim)+'</p></article>'+
+      '<div class="audit-comparison"><article class="audit-panel muse"><h4>۱. بیان وب‌سایت از نامزد C4 (بازنویسی راهنما)</h4><p>'+safe(f.claim)+'</p></article>'+
       '<article class="audit-panel codex"><h4>۲. نتیجه بررسی Codex</h4>'+tag(x.verdict,'blue')+'<p>'+safe(x.claim)+'</p></article></div>'+
       '<div class="audit-revised"><h4>۳. صورت اصلاح‌شده پیشنهادی Codex — این متن، ادعای جدید برای داوری شماست</h4><p>'+safe(x.corrected)+'</p></div>'+
       '<div class="audit-panel codex"><h4>استدلال کلی Codex</h4><p>'+safe(x.reason)+'</p>'+
