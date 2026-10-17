@@ -110,7 +110,7 @@
     catch(_){showToast('ذخیره ممکن نیست؛ فایل JSON پشتیبان بگیرید.');}
   }
   function partValid(p){
-    return !!p&&!!validVote(p.decision)&&(p.decision==='approve'||p.reason.trim().length>=8);
+    return !!p&&!!validVote(p.decision)&&p.reason.trim().length>=12;
   }
   function completion(id){
     const item=review(id);
@@ -288,6 +288,7 @@
 
   function reviewStage(rule){
     const part=PARTS[partIndex],cell=rule.components[part.key],rec=review(selected).parts[part.key],done=completion(selected).partsDone;
+    const mpart=auditedPart(rule.id,part.key);
     const pager=PARTS.map((p,i)=>{
       const recorded=partValid(review(selected).parts[p.key]);
       return '<button type="button" class="'+(i===partIndex?'active':recorded?'done':'')+'" data-action="part" data-index="'+i+'" aria-label="'+safe(p.name)+'">'+
@@ -299,15 +300,20 @@
         '<strong>'+safe(v.name)+'</strong><small>'+safe(v.sub)+'</small></button>';
     }).join('');
     const risks=cell.adverseRefs.length?'<div class="danger"><strong>شاهد مخالف مرتبط: '+safe(cell.adverseRefs.join('، '))+'</strong><br>این کد به مدرک نقض یا محدودکننده اشاره دارد. متن کامل آن در این بسته ارائه نشده است؛ تا پیش از بررسی در منابع پژوهشی، از ادعای رفع تعارض خودداری کنید.</div>':'';
+    const machineAnalysis=mpart?'<div class="machine-note"><h4>گزارش Codex درباره همین محور · رأی انسانی نیست</h4>'+
+      '<span class="pill blue">'+safe(machineState(mpart.decision))+'</span>'+
+      '<p>'+safe(mpart.reason)+'</p>'+
+      '<strong class="muted-small">ارجاعات و سیاق‌های افزوده گزارش:</strong>'+recordButtons(mpart.refs)+
+      '</div>':'<div class="warning">Codex برای این محور گزارش معتبری ثبت نکرده است.</div>';
     return '<section class="card"><div class="section-eyebrow">گام دوم · ارزیابی علمی جزءبه‌جزء</div><h3>پرسش '+(partIndex+1)+' از ۶</h3>'+
       '<p class="muted">برای جابه‌جایی میان پرسش‌ها روی شماره‌ها بزنید. '+done+' پرسش دارای پاسخ کافی است.</p><div class="part-navigation">'+pager+'</div>'+
       '<div class="review-layout"><div class="question-panel"><div class="section-eyebrow">'+safe(part.name)+'</div>'+
       '<h3>'+safe(part.question)+'</h3><p class="explain">'+safe(part.help)+'</p>'+
       '<p class="muted">این سؤال را درباره قاعده «<strong>'+safe(rule.title)+'</strong>» پاسخ می‌دهید؛ عنوان جزء، خودِ نقل از شیخ نیست.</p>'+
-      '<div class="research-status">'+statusTag(cell.status)+'</div>'+
+      '<div class="research-status">'+statusTag(cell.status)+'</div>'+machineAnalysis+
       (cell.note?'<div class="warning">یادداشت پژوهش: '+safe(cell.note)+'</div>':'')+risks+
-      '<div class="decision-hint">پس از بررسی شاهد، نظر خودتان چیست؟</div><div class="decision-options" role="group" aria-label="رأی برای '+safe(part.name)+'">'+choices+'</div>'+
-      '<label class="note-label" for="part-reason">دلیل شما <span>'+(rec.decision==='approve'?'(در تأیید اختیاری؛ توصیه می‌شود)':'(برای رد، اصلاح و تعلیق الزامی)')+'</span></label>'+
+      '<div class="human-check"><strong>داوری انسانی شما، جدا از نظر Codex</strong><p>رأی‌تان را درباره صورت‌بندی این محور در پرتو شواهد و اصلاح پیشنهادی انتخاب کنید. حتی برای تأیید، استدلال بنویسید.</p></div>'+'<div class="decision-hint">اکنون نظر علمی خودتان چیست؟</div><div class="decision-options" role="group" aria-label="رأی برای '+safe(part.name)+'">'+choices+'</div>'+
+      '<label class="note-label" for="part-reason">استدلال مستقل شما <span>(برای همه انتخاب‌ها الزامی؛ حداقل ۱۲ نویسه)</span></label>'+
       '<textarea id="part-reason" class="note" data-input="part-reason" placeholder="مثلاً: این عبارت ناظر به خصوص تعارض خبرین است و نباید به اصول عملیه تعمیم داده شود…">'+safe(rec.reason)+'</textarea>'+
       '<p id="part-validation" class="validation" role="alert"></p>'+
       '<div class="step-foot"><button type="button" class="button button-outline" data-action="previous-part" '+(partIndex===0?'disabled':'')+'>→ پرسش قبل</button>'+
@@ -357,7 +363,7 @@
   function partProblem(){
     const part=PARTS[partIndex],p=review(selected).parts[part.key];
     if(!p.decision)return 'لطفاً یکی از چهار رأی را انتخاب کنید؛ اگر هنوز نمی‌دانید، «فعلاً معلق» را بزنید.';
-    if(!partValid(p))return 'برای رد، اصلاح یا تعلیق این بخش، دست‌کم ۸ نویسه دلیل بنویسید.';
+    if(!partValid(p))return 'برای هر تصمیم علمی، حتی تأیید، حداقل ۱۲ نویسه استدلال خودتان را بنویسید.';
     return '';
   }
   function finalProblem(){
@@ -365,7 +371,7 @@
     for(const p of PARTS){
       const row=review(selected).parts[p.key];
       if(!row.decision)return 'پرسش «'+p.name+'» هنوز رأی ندارد.';
-      if(!partValid(row))return 'دلیل پرسش «'+p.name+'» کامل نیست.';
+      if(!partValid(row))return 'استدلال پرسش «'+p.name+'» ناقص است (حداقل ۱۲ نویسه).';
     }
     const item=review(selected);
     if(!item.decision)return 'یک رأی نهایی انتخاب کنید.';
