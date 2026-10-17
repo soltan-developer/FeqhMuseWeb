@@ -75,7 +75,8 @@
   const sourceById=id=>data.sources.find(s=>s.id===id);
   const bookName=id=>data.books.find(x=>x.id===id)?.title||'کتاب '+id;
   const showToast=msg=>{const t=$('toast');t.textContent=msg;t.classList.add('visible');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('visible'),3300);};
-  function fresh(){return {review_schema:SCHEMA,source_sha:data.source_sha,reviewer:'',edition_note:'',created_at:now(),updated_at:now(),reviews:{}};}
+  function fresh(){return {review_schema:SCHEMA,source_sha:data.source_sha,review_target:'STEP1_CORRECTED_CANDIDATE',
+      reviewer:'',edition_note:'',created_at:now(),updated_at:now(),reviews:{},legacy_reviews:{},migrated_from_c4:false};}
   function review(id){
     if(!draft.reviews[id])draft.reviews[id]={parts:{},decision:'',reason:'',updated_at:null,submitted_at:null};
     const entry=draft.reviews[id];
@@ -90,9 +91,12 @@
     draft.reviewer=String(raw.reviewer||'').slice(0,160);
     draft.edition_note=String(raw.edition_note||'').slice(0,350);
     draft.created_at=raw.created_at||now();
+    const legacyScope=raw.review_target!=='STEP1_CORRECTED_CANDIDATE';
+    draft.legacy_reviews=legacyScope?JSON.parse(JSON.stringify(raw.reviews)):(raw.legacy_reviews||{});
+    draft.migrated_from_c4=legacyScope||!!raw.migrated_from_c4;
     for(const rule of data.rules){
       const source=raw.reviews[rule.id];
-      if(!source||typeof source!=='object')continue;
+      if(!source||typeof source!=='object'||legacyScope)continue;
       const dest=review(rule.id);
       dest.decision=validVote(source.decision);
       dest.reason=String(source.reason||'').slice(0,20000);
@@ -288,7 +292,7 @@
 
   function reviewStage(rule){
     const part=PARTS[partIndex],cell=rule.components[part.key],rec=review(selected).parts[part.key],done=completion(selected).partsDone;
-    const mpart=auditedPart(rule.id,part.key);
+    const mpart=auditedPart(rule.id,part.key),legacy=draft.legacy_reviews?.[selected]?.parts?.[part.key];
     const pager=PARTS.map((p,i)=>{
       const recorded=partValid(review(selected).parts[p.key]);
       return '<button type="button" class="'+(i===partIndex?'active':recorded?'done':'')+'" data-action="part" data-index="'+i+'" aria-label="'+safe(p.name)+'">'+
@@ -312,6 +316,7 @@
       '<p class="muted">این سؤال را درباره قاعده «<strong>'+safe(rule.title)+'</strong>» پاسخ می‌دهید؛ عنوان جزء، خودِ نقل از شیخ نیست.</p>'+
       '<div class="research-status">'+statusTag(cell.status)+'</div>'+machineAnalysis+
       (cell.note?'<div class="warning">یادداشت پژوهش: '+safe(cell.note)+'</div>':'')+risks+
+      (legacy?'<div class="warning"><strong>سابقه محفوظ از وب‌اپ C4 (نه رأی این نسخه):</strong> '+safe(voteName(legacy.decision))+' · '+safe(legacy.reason||'بدون استدلال')+'</div>':'')+
       '<div class="human-check"><strong>داوری انسانی شما، جدا از نظر Codex</strong><p>رأی‌تان را درباره صورت‌بندی این محور در پرتو شواهد و اصلاح پیشنهادی انتخاب کنید. حتی برای تأیید، استدلال بنویسید.</p></div>'+'<div class="decision-hint">اکنون نظر علمی خودتان چیست؟</div><div class="decision-options" role="group" aria-label="رأی برای '+safe(part.name)+'">'+choices+'</div>'+
       '<label class="note-label" for="part-reason">استدلال مستقل شما <span>(برای همه انتخاب‌ها الزامی؛ حداقل ۱۲ نویسه)</span></label>'+
       '<textarea id="part-reason" class="note" data-input="part-reason" placeholder="مثلاً: این عبارت ناظر به خصوص تعارض خبرین است و نباید به اصول عملیه تعمیم داده شود…">'+safe(rec.reason)+'</textarea>'+
@@ -323,7 +328,7 @@
       '<div class="warning">نکته نسخه‌شناختی: شماره صفحه مربوط به دیتابیس است، نه چاپ تصحیح‌شده.</div></aside></div></section>';
   }
   function finalStage(rule){
-    const rec=review(selected),done=completion(selected),machine=audited(rule.id);
+    const rec=review(selected),done=completion(selected),machine=audited(rule.id),legacy=draft.legacy_reviews?.[selected];
     const cards=PARTS.map(part=>{
       const p=rec.parts[part.key],okay=partValid(p);
       return '<button type="button" class="answer-summary" data-action="part" data-index="'+PARTS.indexOf(part)+'"><strong>'+safe(part.name)+'</strong><span>'+safe(okay?voteName(p.decision):'هنوز کامل نشده')+' ←</span></button>';
@@ -334,7 +339,8 @@
     return '<section class="card"><div class="section-eyebrow">گام سوم · تصمیم علمی خودتان</div><h3>جمع‌بندی قاعده: '+safe(rule.title)+'</h3>'+
       '<p class="muted">میزان آمادگی: '+done.partsDone+' از ۶ محور پاسخ مستدل دارند. درباره کل قاعده نظر دهید؛ لزوماً رأی همه اجزا یکسان نیست.</p>'+
       '<div class="final-grid">'+cards+'</div></section>'+
-      '<section class="card"><div class="section-eyebrow">اکنون جمع‌بندی مستقل شما</div><h3 class="final-human-title">رأی نهایی انسانی درباره این قاعده</h3>'+'<div class="final-compare"><strong>پیشنهاد Codex (صرفاً نظر ماشین):</strong><p>'+(machine?safe(machine.verdict)+' · '+safe(machine.corrected):'گزارش در دسترس نیست')+'</p></div>'+
+      '<section class="card"><div class="section-eyebrow">اکنون جمع‌بندی مستقل شما</div><h3 class="final-human-title">رأی نهایی انسانی درباره این قاعده</h3>'+(legacy?'<div class="warning"><strong>رأی سابق شما درباره C4 (صرفاً برای مراجعه، نه تصویب این پیشنهاد):</strong> '+safe(voteName(legacy.decision))+' · '+safe(legacy.reason||'بدون استدلال')+'</div>':'')+
+      '<div class="final-compare"><strong>پیشنهاد Codex (صرفاً نظر ماشین):</strong><p>'+(machine?safe(machine.verdict)+' · '+safe(machine.corrected):'گزارش در دسترس نیست')+'</p></div>'+
       '<p class="muted">تصمیم شما درباره <strong>صورت اصلاح‌شده پیشنهادی در گزارش Codex</strong> است. «تأیید» یعنی این تقریر را پس از مقابله با متون می‌پذیرید؛ «رد» یعنی قابل انتساب نیست؛ «اصلاح» یعنی متن دقیق‌تری پیشنهاد می‌کنید؛ «تعلیق» یعنی سند کافی ندارید. از رأی ماشین تقلید نکنید.</p>'+
       '<div class="decision-options">'+votes+'</div>'+
       '<label for="final-reason" class="note-label">استدلال شما و در صورت اختلاف، توضیح درباره نقد Codex <span>(الزامی؛ دست‌کم ۱۲ نویسه)</span></label>'+
@@ -380,6 +386,7 @@
   }
   function exportPayload(){
     return {review_schema:SCHEMA,source_sha:data.source_sha,book_commit:data.book_commit,
+      review_target:'STEP1_CORRECTED_CANDIDATE',previous_c4_reviews_migrated:!!draft.migrated_from_c4,
       audit_stage:'step1',audit_file:'research/step1/FINDINGS.json',audit_reviewer:audit.reviewer,
       audit_date:audit.date,audit_base_commit:audit.repo_commit,
       verification_discrepancy:{record_hash_false_count:verificationRows.filter(x=>x.recordHashMatches===false).length,print_witness_checked:false},
@@ -392,6 +399,7 @@
         return {rule_key:rule.id,title:rule.title,grade_proposal:rule.grade,
           outcome:r.decision,reason:r.reason,complete:completion(rule.id).complete,
           verdict_target:'HUMAN_VERDICT_ON_CODEX_CORRECTED_PROPOSAL',
+          previous_c4_draft:draft.legacy_reviews?.[rule.id]||null,
           machine_step1:(()=>{const a=audited(rule.id);return a?{reviewer:audit.reviewer,verdict:a.verdict,
             claim:a.claim,corrected:a.corrected,reason:a.reason,
             parts:Object.fromEntries(PARTS.map(p=>[p.key,{decision:a.parts[p.key].decision,
